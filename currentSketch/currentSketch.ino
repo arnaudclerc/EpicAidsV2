@@ -4,8 +4,8 @@
 
 #define NSS   (10)
 
-int out1 = 6;
-int out2 = 3;
+int out1 = 9;
+int out2 = 6;
 float V1 = 0;
 float V2 = 0;
 

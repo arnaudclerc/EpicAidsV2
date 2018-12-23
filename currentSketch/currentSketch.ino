@@ -126,15 +126,6 @@ void    call_one(int pin)
         digitalWrite(pin, HIGH);       
 }
 
-int                  makeTimeStamp()
-{
-        time = rtc.getTime();
-        setTime(time.hour, time.min, time.sec, time.date, retrieveM(rtc.getMonthStr()), time.year);
-        Serial.print("Epoch: ");
-        Serial.println(now());
-        return (now() + 604800);      // get Epoch from current time (unix timestamp) plus one week in seconds
-}
-
 int                  retrieveM(char *mth)
 {
         char         existing[13][10] = {
@@ -158,6 +149,15 @@ int                  retrieveM(char *mth)
                         return (i + 1);
         }
     
+}
+
+int                  makeTimeStamp()
+{
+        time = rtc.getTime();
+        setTime(time.hour, time.min, time.sec, time.date, retrieveM(rtc.getMonthStr()), time.year);
+        Serial.print("Epoch: ");
+        Serial.println(now());
+        return (now() + 604800);      // get Epoch from current time (unix timestamp) plus one week in seconds
 }
 
 void                 remove_expired()

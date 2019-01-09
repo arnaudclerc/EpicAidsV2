@@ -10,7 +10,7 @@
 #define RESET (3)
 
 #define ShipMEM (2048) // Taille de l'EEPROM de la carte courant 4096bits pour la mega ADK
-#define DUREE (518400)
+#define DUREE (608400)
 
 
 Adafruit_PN532      nfc(IRQ, RESET);      // Commutation en I2C avec le shield NFC
@@ -69,7 +69,7 @@ struct ms           getEEPROM(uint8_t i)
         return (lol);
 }
 
-void                saveEEPROM(uint8_t val[], int force)
+void                saveEEPROM(uint8_t val[], long force)
 {
         struct ms   Fecha = makeTimeStamp(force);
 
@@ -89,11 +89,14 @@ void                 chargeEEPROM()
         uint8_t      list[][7] = {
                 { 4, 62, 97, 50, 198, 78, 128 },
                 { 4, 95, 168, 50, 198, 78, 128 },
-                { 4, 244, 140, 50, 198, 78, 128 }
+                { 4, 244, 140, 50, 198, 78, 128 },
+                { 4, 210, 128, 50, 198, 78, 128 }
         };
 
+        time = rtc.getTime();
         ite = 0;
         add = 0;
+        bzez = time.sec + 2;
         if (EEPROM.read(0) == 0)                 // fill a first time the memory
         {
                 for (int i = 0; i <= ShipMEM; i++)
@@ -102,6 +105,7 @@ void                 chargeEEPROM()
                 saveEEPROM(list[0], 31536000);
                 saveEEPROM(list[1], 31536000);
                 saveEEPROM(list[2], 31536000);
+                saveEEPROM(list[3], 31536000);
         }
         else
         {
@@ -118,7 +122,6 @@ void                 chargeEEPROM()
 void                 setup(void)
 {
         Serial.begin(115200);
-        delay(50);
         pinMode(led, OUTPUT);  
         pinMode(out1, OUTPUT);
         pinMode(out2, OUTPUT);
@@ -168,7 +171,7 @@ int                  retrieveM(char *mth)
         }
 }
 
-struct ms          makeTimeStamp(int force)
+struct ms          makeTimeStamp(long force)
 {
         struct ms  data;
         long int   eeppoo;
@@ -210,14 +213,6 @@ void                 remove_expired()
 
 void                 onInterrupt()
 {
-        //V1 = analogRead(A5) * (5 / 1023.0);
-        V2 = analogRead(A0) * (5 / 1023.0);
-          
-        if (V1 >= 0.3) 
-                call_one(out1);
-          
-        if (V2 >= 0.3) 
-                call_one(out2);
 }
 
 void                 loop(void)
@@ -239,15 +234,29 @@ void                 loop(void)
                 chargeEEPROM();
         }
    
-        delay(2);
         time = rtc.getTime();
         
         if (time.min % 10 == 0 && time.sec == 00)
                 remove_expired();
+        
+        
+        //V1 = analogRead(A5) * (5 / 1023.0);
+        V2 = analogRead(A0) * (5 / 1023.0);
+          
+        if (V1 >= 0.3) 
+                call_one(out1);
+          
+        if (V2 >= 0.1) 
+                call_one(out2);
+        
+                
+        if (time.sec != bzez)
+                delay(2);
         if (time.sec == bzez)
         {
-                ++bzez;
+                bzez = bzez == 59 ? 0 : bzez + 1;
                 digitalWrite(led, HIGH);
+                delay(2);
                 digitalWrite(led, LOW);
           
         }
@@ -299,7 +308,7 @@ void                 loop(void)
 void         blink(int mode, int duree)
 {
         digitalWrite(led, HIGH);
-        delay(70 + mode == 2 ? 100 : mode == 1 ? 200 : 0);
+        delay(70 + mode == 2 ? 150 : mode == 1 ? 300 : 0);
         digitalWrite(led, LOW);
         if (mode == 1)
         {
